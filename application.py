@@ -7,13 +7,13 @@ application = Flask(__name__)
 @application.route('/')
 def home():
     # 這裡定義你的 Google 文件 ID
-    google_doc_id = "1oupJh4l6Dlrun8gNbK0H83in7Kn6lhAnfxIMITR-PxU" 
+    google_doc_id = "e/2PACX-1vSZIDp4jBIGPZzwmL473aMjP25nRiPyMZE7U_62KXH8jB6MiSCNQrexzjbEOgmhy0KJq0Ll7yd_Mj_v" 
     return render_template('blog.html', doc_id=google_doc_id)
 
 @application.route('/aws-guide')
 def aws_guide():
     # 這是你提供的文件 ID
-    doc_id = "1oupJh4l6Dlrun8gNbK0H83in7Kn6lhAnfxIMITR-PxU"
+    doc_id = "e/2PACX-1vSZIDp4jBIGPZzwmL473aMjP25nRiPyMZE7U_62KXH8jB6MiSCNQrexzjbEOgmhy0KJq0Ll7yd_Mj_v"
     return render_template('post.html', doc_id=doc_id)
 
 @application.route('/github')
