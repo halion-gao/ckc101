@@ -4,6 +4,7 @@ import random
 import datetime
 import urllib.request
 import urllib.error
+# pyrefly: ignore [missing-import]
 from flask import Flask, jsonify, render_template, request
 
 # Import psutil optionally to get real system statistics if available
@@ -135,8 +136,10 @@ def get_logs():
     generated_logs = []
 
     # Seed logs with decreasing seconds from current time
-    for i in range(limit):
-        log_time = now - datetime.timedelta(seconds=i * random.randint(3, 15))
+    attempts = 0
+    max_attempts = 500
+    while len(generated_logs) < limit and attempts < max_attempts:
+        log_time = now - datetime.timedelta(seconds=attempts * random.randint(3, 15))
         level, service, message = random.choice(LOG_MESSAGES)
         
         if level_filter == "ALL" or level == level_filter:
@@ -146,6 +149,7 @@ def get_logs():
                 "service": service,
                 "message": message
             })
+        attempts += 1
             
     # Sort chronological (oldest first or newest first, let's do newest first for dashboard)
     return jsonify(generated_logs)

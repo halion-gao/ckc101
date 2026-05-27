@@ -254,9 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearLogsBtn = document.getElementById('clear-logs-btn');
     let displayedLogTimes = new Set();
 
-    function formatLogLine(log) {
+    function formatLogLine(log, logId) {
         const line = document.createElement('div');
         line.className = `log-line log-${log.level.toLowerCase()}`;
+        line.dataset.id = logId;
         
         line.innerHTML = `
             <span class="log-time">${log.timestamp}</span>
@@ -279,10 +280,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 logs.reverse().forEach(log => {
                     const logId = `${log.timestamp}-${log.level}-${log.service}-${log.message.substring(0, 15)}`;
                     if (!displayedLogTimes.has(logId)) {
-                        logTerminal.appendChild(formatLogLine(log));
+                        logTerminal.appendChild(formatLogLine(log, logId));
                         displayedLogTimes.add(logId);
                     }
                 });
+
+                // Prune old logs if they exceed 100 rows
+                while (logTerminal.children.length > 100) {
+                    const firstChild = logTerminal.firstChild;
+                    if (firstChild) {
+                        const idToRemove = firstChild.dataset.id;
+                        if (idToRemove) {
+                            displayedLogTimes.delete(idToRemove);
+                        }
+                        logTerminal.removeChild(firstChild);
+                    }
+                }
 
                 // Scroll to bottom if appropriate
                 if (isNearBottom) {
@@ -332,35 +345,53 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/api/stocks')
             .then(res => res.json())
             .then(stocks => {
-                stockGrid.innerHTML = '';
                 stocks.forEach(stock => {
                     const sparkPath = getSparklinePath(stock.history);
                     const isPositive = stock.change >= 0;
+                    const cardId = `stock-card-${stock.ticker}`;
+                    let card = document.getElementById(cardId);
                     
-                    const card = document.createElement('div');
-                    card.className = 'card glass-card stock-card';
-                    card.innerHTML = `
-                        <div class="stock-card-header">
-                            <div class="stock-card-meta">
-                                <span class="stock-ticker">${stock.ticker}</span>
-                                <span class="stock-name">${stock.name}</span>
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = cardId;
+                        card.className = 'card glass-card stock-card';
+                        card.innerHTML = `
+                            <div class="stock-card-header">
+                                <div class="stock-card-meta">
+                                    <span class="stock-ticker">${stock.ticker}</span>
+                                    <span class="stock-name">${stock.name}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="stock-card-body">
-                            <div class="stock-price-row">
-                                <span class="stock-price">$${stock.price.toFixed(2)}</span>
-                                <span class="stock-change ${isPositive ? 'positive' : 'negative'}">
-                                    ${isPositive ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)
-                                </span>
+                            <div class="stock-card-body">
+                                <div class="stock-price-row">
+                                    <span class="stock-price"></span>
+                                    <span class="stock-change"></span>
+                                </div>
+                                <div class="stock-sparkline-wrapper">
+                                    <svg class="stock-sparkline-svg" viewBox="0 0 100 30" preserveAspectRatio="none">
+                                        <path d="" fill="none" stroke="" stroke-width="2"></path>
+                                    </svg>
+                                </div>
                             </div>
-                            <div class="stock-sparkline-wrapper">
-                                <svg class="stock-sparkline-svg" viewBox="0 0 100 30" preserveAspectRatio="none">
-                                    <path d="${sparkPath}" fill="none" stroke="${isPositive ? '#10b981' : '#ef4444'}" stroke-width="2"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    `;
-                    stockGrid.appendChild(card);
+                        `;
+                        stockGrid.appendChild(card);
+                    }
+                    
+                    // Update content in-place
+                    const priceEl = card.querySelector('.stock-price');
+                    const changeEl = card.querySelector('.stock-change');
+                    const pathEl = card.querySelector('.stock-sparkline-svg path');
+                    
+                    priceEl.textContent = `$${stock.price.toFixed(2)}`;
+                    changeEl.textContent = `${isPositive ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`;
+                    
+                    // Toggle positive/negative classes
+                    changeEl.classList.toggle('positive', isPositive);
+                    changeEl.classList.toggle('negative', !isPositive);
+                    
+                    // Update sparkline SVG path and color
+                    pathEl.setAttribute('d', sparkPath);
+                    pathEl.setAttribute('stroke', isPositive ? '#10b981' : '#ef4444');
                 });
             })
             .catch(err => console.error('Error fetching stock data:', err));
