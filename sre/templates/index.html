@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRE 即時運維監控儀表板</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M12 8v4"/>
+                    <path d="M12 16h.01"/>
+                </svg>
+                <span>SRE 運維監控</span>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#overview" class="menu-item active" id="menu-overview">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span>運行概覽</span>
+                </a>
+                <a href="#ping-check" class="menu-item" id="menu-ping">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    <span>連線檢測</span>
+                </a>
+                <a href="#logs" class="menu-item" id="menu-logs">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <span>即時日誌流</span>
+                </a>
+                <a href="#stocks-company" class="menu-item" id="menu-stocks-company">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    </svg>
+                    <span>晨間股市 & 午後公司</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="theme-toggle-container">
+                    <span>主題切換</span>
+                    <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle light/dark theme">
+                        <span class="toggle-icon">🌙</span>
+                    </button>
+                </div>
+                <div class="app-uptime">
+                    <span class="label">系統運行時間</span>
+                    <span id="uptime-value" class="value">0d 0h 0m 0s</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div>
+                    <h1>SRE 運維指揮中心</h1>
+                    <p class="subtitle">即時監控集群基礎架構與伺服器運作狀態。</p>
+                </div>
+                <div class="status-indicator-wrapper">
+                    <span class="status-pulse"></span>
+                    <span class="status-text">系統狀態正常</span>
+                </div>
+            </header>
+
+            <!-- Dashboard Sections -->
+            <div class="content-body">
+                
+                <!-- Section 1: Overview (Metrics Dashboard) -->
+                <section id="overview" class="content-section">
+                    <div class="grid-layout">
+                        <!-- CPU Usage Card -->
+                        <div class="card glass-card cpu-card">
+                            <div class="card-header">
+                                <h3>CPU 負載</h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                    <rect x="9" y="9" width="6" height="6"/>
+                                    <line x1="9" y1="1" x2="9" y2="4"/>
+                                    <line x1="15" y1="1" x2="15" y2="4"/>
+                                    <line x1="9" y1="20" x2="9" y2="23"/>
+                                    <line x1="15" y1="20" x2="15" y2="23"/>
+                                    <line x1="20" y1="9" x2="23" y2="9"/>
+                                    <line x1="20" y1="15" x2="23" y2="15"/>
+                                    <line x1="1" y1="9" x2="4" y2="9"/>
+                                    <line x1="1" y1="15" x2="4" y2="15"/>
+                                </svg>
+                            </div>
+                            <div class="card-body-progress">
+                                <div class="radial-progress-wrapper">
+                                    <svg class="radial-svg" viewBox="0 0 100 100">
+                                        <circle class="radial-bg" cx="50" cy="50" r="40"></circle>
+                                        <circle class="radial-bar" id="cpu-radial-bar" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                                    </svg>
+                                    <div class="radial-value" id="cpu-value">0%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Memory Usage Card -->
+                        <div class="card glass-card memory-card">
+                            <div class="card-header">
+                                <h3>記憶體使用率</h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14z"/>
+                                    <line x1="6" y1="11" x2="18" y2="11"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric-display">
+                                    <span class="metric-num" id="memory-value">0%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" id="memory-bar" style="width: 0%"></div>
+                                </div>
+                                <span class="metric-desc">ECC 實體記憶體分配池</span>
+                            </div>
+                        </div>
+
+                        <!-- Disk Space Card -->
+                        <div class="card glass-card disk-card">
+                            <div class="card-header">
+                                <h3>硬碟分割區</h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                                    <line x1="6" y1="6" x2="6.01" y2="6"/>
+                                    <line x1="6" y1="18" x2="6.01" y2="18"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric-display">
+                                    <span class="metric-num" id="disk-value">0%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" id="disk-bar" style="width: 0%"></div>
+                                </div>
+                                <span class="metric-desc">系統邏輯根目錄 (/) 可用空間</span>
+                            </div>
+                        </div>
+
+                        <!-- Network Throughput Card -->
+                        <div class="card glass-card network-card">
+                            <div class="card-header">
+                                <h3>網路 I/O 吞吐量</h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="16 3 21 3 21 8"/>
+                                    <line x1="4" y1="20" x2="21" y2="3"/>
+                                    <polyline points="21 16 21 21 16 21"/>
+                                    <line x1="15" y1="15" x2="21" y2="21"/>
+                                    <line x1="4" y1="4" x2="9" y2="9"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <div class="network-stats">
+                                    <div class="stat-row">
+                                        <span class="label">下載流量:</span>
+                                        <span class="value" id="net-in-value">0.0 KB/s</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="label">上傳流量:</span>
+                                        <span class="value" id="net-out-value">0.0 KB/s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics History Chart Overlay -->
+                    <div class="card glass-card chart-card margin-top">
+                        <div class="card-header">
+                            <h3>延遲與負載歷史趨勢</h3>
+                            <span class="badge" id="latency-value">0 ms</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Custom HTML5 / SVG Sparkline Chart Area -->
+                            <div class="chart-container">
+                                <svg id="history-chart" width="100%" height="200" viewBox="0 0 800 200" preserveAspectRatio="none">
+                                    <!-- Grid lines -->
+                                    <line x1="0" y1="50" x2="800" y2="50" class="chart-grid"></line>
+                                    <line x1="0" y1="100" x2="800" y2="100" class="chart-grid"></line>
+                                    <line x1="0" y1="150" x2="800" y2="150" class="chart-grid"></line>
+                                    <!-- Path lines -->
+                                    <path id="cpu-path" d="" fill="none" stroke="var(--neon-cyan)" stroke-width="3"></path>
+                                    <path id="latency-path" d="" fill="none" stroke="var(--neon-green)" stroke-width="2" stroke-dasharray="4 2"></path>
+                                </svg>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item"><span class="color-dot cyan-dot"></span> CPU 負載 (%)</div>
+                                <div class="legend-item"><span class="color-dot green-dot"></span> 回應延遲 (ms)</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Ping Checker -->
+                <section id="ping-check" class="content-section hidden">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3>服務健康狀況檢測</h3>
+                            <p class="desc">驗證外部微服務或公共網路端點的可達性與連線延遲時間。</p>
+                        </div>
+                        <div class="card-body">
+                            <form id="ping-form" class="ping-form">
+                                <div class="input-group">
+                                    <input type="text" id="ping-url" placeholder="https://api.github.com" required>
+                                    <button type="submit" class="btn btn-primary" id="ping-submit">
+                                        <span>開始檢測</span>
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div id="ping-result-container" class="ping-result-container hidden">
+                                <div class="ping-status-card">
+                                    <div class="status-main">
+                                        <span id="res-status-badge" class="badge">正常</span>
+                                        <h4 id="res-url">https://api.github.com</h4>
+                                    </div>
+                                    <div class="status-details">
+                                        <div class="detail-box">
+                                            <span class="label">HTTP 狀態碼</span>
+                                            <span class="value" id="res-code">200</span>
+                                        </div>
+                                        <div class="detail-box">
+                                            <span class="label">回應延遲</span>
+                                            <span class="value" id="res-latency">42 ms</span>
+                                        </div>
+                                        <div class="detail-box">
+                                            <span class="label">檢測時間</span>
+                                            <span class="value" id="res-time">10:30:15</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- History of Pings -->
+                            <div class="ping-history-wrapper margin-top">
+                                <h4>連線檢測歷史紀錄</h4>
+                                <div class="table-container">
+                                    <table class="ping-table">
+                                        <thead>
+                                            <tr>
+                                                <th>端點網址 (URL)</th>
+                                                <th>連線狀態</th>
+                                                <th>狀態碼</th>
+                                                <th>回應時間</th>
+                                                <th>檢測時間</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ping-history-body">
+                                            <!-- Dynamic entries -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Log Stream -->
+                <section id="logs" class="content-section hidden">
+                    <div class="card glass-card">
+                        <div class="card-header logs-header">
+                            <div>
+                                <h3>即時運維日誌流</h3>
+                                <p class="desc">來自活動集群協調器的即時監控與診斷輸出。</p>
+                            </div>
+                            <div class="log-controls">
+                                <select id="log-filter-select" aria-label="Filter logs by level">
+                                    <option value="ALL">所有日誌等級</option>
+                                    <option value="INFO">僅一般訊息 (INFO)</option>
+                                    <option value="WARNING">警告訊息 (WARNING)</option>
+                                    <option value="ERROR">錯誤訊息 (ERROR)</option>
+                                </select>
+                                <button id="clear-logs-btn" class="btn btn-secondary">清除日誌</button>
+                            </div>
+                        </div>
+                        <div class="card-body no-padding">
+                            <div class="log-terminal">
+                                <div class="terminal-header">
+                                    <span class="term-dot red"></span>
+                                    <span class="term-dot yellow"></span>
+                                    <span class="term-dot green"></span>
+                                    <span class="term-title">bash - sre_app_stderr.log</span>
+                                </div>
+                                <div class="terminal-body" id="log-terminal-body">
+                                    <!-- Dynamic logs will be appended here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Stocks & Company (晨間股市 & 午後公司) -->
+                <section id="stocks-company" class="content-section hidden">
+                    <!-- Morning Stock Part -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>晨間股市監控</h3>
+                                <p class="desc">科技巨頭與 SRE 基礎架構指標的即時股價變動。</p>
+                            </div>
+                            <span class="badge" id="market-status-badge">股市交易中</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="grid-layout" id="stock-ticker-grid">
+                                <!-- Dynamic stock cards will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Afternoon Company Part -->
+                    <div class="grid-layout margin-top">
+                        <!-- Left Side: Shifts & Incidents -->
+                        <div class="card glass-card" style="grid-column: span 2;">
+                            <div class="card-header">
+                                <h3>SRE 值班人員輪替</h3>
+                                <span class="badge">中班值勤中</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="ping-table">
+                                        <thead>
+                                            <tr>
+                                                <th>值班時段</th>
+                                                <th>值班工程師</th>
+                                                <th>分配區域</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="company-shifts-body">
+                                            <!-- Dynamic shifts -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <h4 class="margin-top">活動中的故障單</h4>
+                                <div class="table-container">
+                                    <table class="ping-table">
+                                        <thead>
+                                            <tr>
+                                                <th>編號</th>
+                                                <th>故障描述</th>
+                                                <th>負責人</th>
+                                                <th>狀態</th>
+                                                <th>發出時間</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="company-incidents-body">
+                                            <!-- Dynamic incidents -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side: Interactive Action Terminal -->
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h3>自動化運維面板</h3>
+                            </div>
+                            <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                                <p class="desc" style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    發送自動化 Kubernetes 與快取集群復原指令以解決活動中的故障。
+                                </p>
+                                
+                                <div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <button class="btn btn-secondary action-btn" data-action="scale_pods" style="text-align: left; justify-content: flex-start;">
+                                        ⚡ 擴容 Pod 副本數 (解決 INC-106)
+                                    </button>
+                                    <button class="btn btn-secondary action-btn" data-action="restart_service" style="text-align: left; justify-content: flex-start;">
+                                        🔄 重啟 Redis 快取集群 (解決 INC-104)
+                                    </button>
+                                    <button class="btn btn-secondary action-btn" data-action="flush_cdn" style="text-align: left; justify-content: flex-start;">
+                                        🧹 重新整理 CDN 邊緣快取 (解決 INC-105)
+                                    </button>
+                                </div>
+
+                                <div class="terminal-body" id="company-terminal-body" style="height: 180px; font-size: 0.75rem; padding: 12px; background: #04050d; border-radius: 8px; margin-top: 10px;">
+                                    [系統] 準備就緒。點擊上方按鈕以部署自動化復原指令...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+        </main>
+    </div>
+
+    <!-- Script imports -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
