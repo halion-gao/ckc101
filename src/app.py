@@ -16,6 +16,19 @@ except ImportError:
 
 app = Flask(__name__)
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+    return response
+
+@app.errorhandler(405)
+def handle_405(e):
+    if request.method == 'OPTIONS':
+        return '', 200
+    return e
+
 # Track start time for uptime calculation
 START_TIME = time.time()
 

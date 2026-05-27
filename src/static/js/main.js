@@ -1,5 +1,10 @@
 // SRE Dashboard Client Logic
 
+// Supports front-end / back-end separation (e.g., GitHub Pages hosting)
+const API_BASE = window.location.hostname.endsWith('github.io')
+    ? 'https://ckc101-api.render.com'
+    : '';
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Navigation & Routing
     const menuItems = {
@@ -146,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function pollMetrics() {
-        fetch('/api/metrics')
+        fetch(`${API_BASE}/api/metrics`)
             .then(res => res.json())
             .then(data => {
                 // Update UI text values
@@ -204,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pingSubmit.disabled = true;
         pingSubmit.querySelector('span').textContent = '檢測中...';
 
-        fetch(`/api/ping?url=${encodeURIComponent(url)}`)
+        fetch(`${API_BASE}/api/ping?url=${encodeURIComponent(url)}`)
             .then(res => res.json())
             .then(data => {
                 // Show result container
@@ -272,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function pollLogs() {
         const level = logFilterSelect.value;
-        fetch(`/api/logs?level=${level}&limit=12`)
+        fetch(`${API_BASE}/api/logs?level=${level}&limit=12`)
             .then(res => res.json())
             .then(logs => {
                 // Determine if user is scrolled near bottom
@@ -344,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Only fetch stock updates if the morning stock section is visible
         if (sections['#stocks-company'].classList.contains('hidden')) return;
 
-        fetch('/api/stocks')
+        fetch(`${API_BASE}/api/stocks`)
             .then(res => res.json())
             .then(stocks => {
                 stocks.forEach(stock => {
@@ -456,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function fetchCompanyInfo() {
-        fetch('/api/company')
+        fetch(`${API_BASE}/api/company`)
             .then(res => res.json())
             .then(data => renderCompanyData(data))
             .catch(err => console.error('Error fetching company info:', err));
@@ -475,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             companyTerminal.innerHTML = '[系統] 正在發送自動化復原指令至後端...';
 
-            fetch('/api/company/action', {
+            fetch(`${API_BASE}/api/company/action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: action })

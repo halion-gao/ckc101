@@ -155,5 +155,21 @@ def test_github_preview_route(client):
     assert 'GitHub Repository Preview'.encode('utf-8') in response.data
     assert b'README.md' in response.data
 
+def test_cors_headers_and_options(client):
+    """Test CORS headers on GET request and OPTIONS preflight."""
+    # Test GET has CORS headers
+    response = client.get('/api/metrics')
+    assert response.status_code == 200
+    assert response.headers.get('Access-Control-Allow-Origin') == '*'
+    assert response.headers.get('Access-Control-Allow-Headers') == 'Content-Type,Authorization'
+    assert response.headers.get('Access-Control-Allow-Methods') == 'GET,POST,PUT,DELETE,OPTIONS'
+
+    # Test OPTIONS preflight request to api route
+    response_opt = client.options('/api/company/action')
+    assert response_opt.status_code == 200
+    assert response_opt.headers.get('Access-Control-Allow-Origin') == '*'
+    assert response_opt.headers.get('Access-Control-Allow-Headers') == 'Content-Type,Authorization'
+    assert response_opt.headers.get('Access-Control-Allow-Methods') == 'GET,POST,PUT,DELETE,OPTIONS'
+
 if __name__ == "__main__":
     pytest.main([__file__])
