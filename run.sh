@@ -21,4 +21,4 @@ pip install -r requirements.txt
 
 # Run the Flask app
 echo "Starting SRE Flask application on port 19191..."
-python3 sre/app.py
+python3 src/app.py

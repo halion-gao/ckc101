@@ -3,10 +3,10 @@ import sys
 # pyrefly: ignore [missing-import]
 import pytest
 
-# Ensure the root/sre directory is in the Python path
+# Ensure the root/src directory is in the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from sre.app import app
+from src.app import app
 
 @pytest.fixture
 def client():
@@ -134,3 +134,26 @@ def test_api_company_action(client):
     resolved_inc = [inc for inc in data['incidents'] if inc['id'] == 'INC-104']
     assert len(resolved_inc) == 1
     assert resolved_inc[0]['status'] == 'RESOLVED'
+
+def test_blog_route(client):
+    """Test that the blog page renders correctly."""
+    response = client.get('/blog')
+    assert response.status_code == 200
+    assert 'My Cloud Lab Blog'.encode('utf-8') in response.data
+    assert b'https://docs.google.com/document/d/' in response.data
+
+def test_aws_guide_route(client):
+    """Test that the AWS guide page renders correctly."""
+    response = client.get('/aws-guide')
+    assert response.status_code == 200
+    assert 'AWS 部署與架構筆記'.encode('utf-8') in response.data
+
+def test_github_preview_route(client):
+    """Test that the GitHub repository preview page renders correctly."""
+    response = client.get('/github')
+    assert response.status_code == 200
+    assert 'GitHub Repository Preview'.encode('utf-8') in response.data
+    assert b'README.md' in response.data
+
+if __name__ == "__main__":
+    pytest.main([__file__])
