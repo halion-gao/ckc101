@@ -530,6 +530,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Update blog link dynamically if hosted on GitHub Pages
+    const blogMenu = document.getElementById('menu-blog');
+    if (blogMenu && API_BASE) {
+        blogMenu.href = `${API_BASE}/blog`;
+    }
+
     // Load company shift info initially and on tab activation
     fetchCompanyInfo();
     window.addEventListener('hashchange', () => {
