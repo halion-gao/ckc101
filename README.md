@@ -44,7 +44,7 @@
 ## 📂 專案目錄結構
 ```text
 ckc101/
-├── src/
+├── sre/
 │   ├── app.py                # Flask 後端應用程式 (Port 19191)
 │   ├── templates/
 │   │   └── index.html        # 儀表板 HTML 模板
@@ -81,7 +81,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # 4. 啟動服務 (預設埠口: 19191)
-python src/app.py
+python sre/app.py
 ```
 啟動後在瀏覽器訪問: `http://localhost:19191`
 
