@@ -6,14 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
         '#overview': document.getElementById('menu-overview'),
         '#ping-check': document.getElementById('menu-ping'),
         '#logs': document.getElementById('menu-logs'),
-        '#stocks-company': document.getElementById('menu-stocks-company')
+        '#stocks-company': document.getElementById('menu-stocks-company'),
+        '#docs': document.getElementById('menu-docs')
     };
 
     const sections = {
         '#overview': document.getElementById('overview'),
         '#ping-check': document.getElementById('ping-check'),
         '#logs': document.getElementById('logs'),
-        '#stocks-company': document.getElementById('stocks-company')
+        '#stocks-company': document.getElementById('stocks-company'),
+        '#docs': document.getElementById('docs')
     };
 
     function navigateToSection(hash) {

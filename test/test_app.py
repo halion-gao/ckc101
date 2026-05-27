@@ -20,6 +20,7 @@ def test_index_page(client):
     assert response.status_code == 200
     assert 'SRE 運維指揮中心'.encode('utf-8') in response.data
     assert b'cpu-radial-bar' in response.data
+    assert b'id="menu-docs"' in response.data
 
 def test_api_metrics(client):
     """Test the metrics endpoint yields correct JSON structure."""

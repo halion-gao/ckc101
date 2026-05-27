@@ -59,6 +59,16 @@
                     </svg>
                     <span>晨間股市 & 午後公司</span>
                 </a>
+                <a href="#docs" class="menu-item" id="menu-docs">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <line x1="10" y1="9" x2="8" y2="9"/>
+                    </svg>
+                    <span>運維文件</span>
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -405,6 +415,34 @@
                                     [系統] 準備就緒。點擊上方按鈕以部署自動化復原指令...
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Google Docs (運維文件) -->
+                <section id="docs" class="content-section hidden">
+                    <div class="card glass-card docs-card" style="height: calc(100vh - 180px); display: flex; flex-direction: column;">
+                        <div class="card-header docs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0;">
+                            <div>
+                                <h3>SRE 運維文檔</h3>
+                                <p class="desc">共用的運維規範與故障排除指引文件 (Google 文件)。</p>
+                            </div>
+                            <a href="https://docs.google.com/document/d/1oupJh4l6Dlrun8gNbK0H83in7Kn6lhAnfxIMITR-PxU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                <span>在新視窗開啟</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="card-body docs-body" style="flex-grow: 1; padding: 0; position: relative; border-radius: 8px; overflow: hidden; background: rgba(0, 0, 0, 0.2);">
+                            <iframe 
+                                src="https://docs.google.com/document/d/1oupJh4l6Dlrun8gNbK0H83in7Kn6lhAnfxIMITR-PxU/preview" 
+                                style="width: 100%; height: 100%; border: none; border-radius: 8px; background: white;"
+                                title="SRE Operations Document"
+                                loading="lazy">
+                            </iframe>
                         </div>
                     </div>
                 </section>
