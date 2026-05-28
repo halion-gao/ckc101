@@ -1,2 +1,15 @@
+# Python caches
 __pycache__/
 *.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# System and logs
+.DS_Store
+*.log
+
+# Docker image tarballs
+*.tar
