@@ -184,6 +184,46 @@ pytest test/
 
 ---
 
+## 🔐 AWS IAM 角色授權與安全指南 (AWS IAM Role & Security Guide)
+
+本專案在 AWS EC2 運行時，**強烈建議優先使用 IAM Role (角色)** 進行 S3 授權，而非在伺服器上配置長效金鑰（Access Key），以確保系統安全性。
+
+### 1. 建立角色 (Create Role)
+1. 進入 AWS **IAM 主控台**，點擊左側 **角色 (Roles)** -> **建立角色 (Create role)**。
+2. 選擇信任實體類型：選擇 **AWS 服務 (AWS service)**。
+3. 選擇使用案例：
+   - 若是給 EC2 虛擬主機使用，選擇 **EC2**。
+   - 若是給自動化腳本使用，選擇 **Lambda**。
+4. 點擊下一步。
+
+### 2. 附加許可政策 (Add Permissions)
+1. 在許可政策搜尋框輸入 **S3**。
+2. 根據需求勾選需要的權限：
+   - `AmazonS3FullAccess`：完全控制權。
+   - `AmazonS3ReadOnlyAccess`：僅能讀取與列出檔案。
+3. 點擊下一步。
+
+### 3. 命名與建立
+1. 角色名稱：建議命名為 `Halion-EC2-S3-Role`（或 `MyService-S3-Access-Role`）。
+2. 點擊 **建立角色**。
+
+### 4. 如何應用此角色？
+建立完 Role 後，必須將它「掛載」到目標資源上：
+- **EC2 執行個體**：
+  1. 進入 **EC2 介面** -> 勾選您的執行個體。
+  2. 點擊 **動作 (Actions)** -> **安全性 (Security)** -> **修改 IAM 角色 (Modify IAM role)**。
+  3. 選擇剛剛建立的角色並儲存。
+  4. **驗證結果**：在該 EC2 內執行 `aws s3 ls` 時，**不需要**執行 `aws configure` 設定金鑰即可直接存取。
+- **Lambda 函數**：
+  1. 進入 **Lambda 函數**配置。
+  2. 在 **組態 (Configuration)** -> **權限 (Permissions)** 中更換執行角色。
+
+### 💡 認知層總結 (Key Concepts)
+- **User vs. Role**：User 是給「人」或「外部程式」用的（配發金鑰，具外洩風險）；Role 是給「AWS 服務」內彼此授權用的（自動取得臨時憑證，最安全）。
+- **安全性**：在 AWS 環境內運行程式時，優先使用 Role 而非 User 金鑰，以避免金鑰外洩風險。
+
+---
+
 ## 📝 專案更新與 Docker 封裝歷程 (Update & Packaging Log)
 
 本專案於近期完成了架構重構、容器化支援與 AWS 雲端對接，以下為主要更新動作：
