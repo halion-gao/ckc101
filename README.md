@@ -6,6 +6,58 @@
 
 ---
 
+## 📊 系統架構與部署流程圖 (Architecture & Deployment Flow)
+
+```mermaid
+graph TD
+    subgraph ClientSide ["客戶端瀏覽器 (Client Browser)"]
+        A["GitHub Pages <br> (halion-gao.github.io/ckc101)"]:::github
+        B["本地端瀏覽器 <br> (localhost:19191)"]:::local
+        C["main.js <br> (動態 API 路由解析)"]:::js
+    end
+
+    A --> C
+    B --> C
+
+    subgraph Routing ["API 請求目標分流"]
+        C -->|偵測為 *.github.io| D["雲端生產端 API <br> (https://ckc101-api.render.com)"]:::production
+        C -->|偵測為 localhost| E["本地開發端 API <br> (http://localhost:19191)"]:::localapi
+    end
+
+    subgraph AWS_Docker ["AWS 雲端容器化部署架構 (Docker-based)"]
+        subgraph AppRunner ["方案 A: AWS App Runner (無伺服器託管)"]
+            F1["GitHub 程式庫 (main)"]:::githubrepo
+            F2["App Runner 自動拉取建置"]:::aws
+            F3["Gunicorn (Python 3.12-slim 容器) <br> [自動處理 CORS & OPTIONS]"]:::container
+        end
+        
+        subgraph EC2 ["方案 B: AWS EC2 (虛擬主機手動部署)"]
+            G1["ckc101-app.tar <br> (本地導出 Docker Image)"]:::tarball
+            G2["EC2 執行個體 <br> (Docker Load 載入並執行)"]:::aws
+        end
+    end
+
+    D --> F3
+    E -->|Flask 開發伺服器| SRE_App["src/app.py"]:::localapi
+
+    F1 -->|Push 觸發 Webhook| F2
+    F2 -->|依據 Dockerfile 構建| F3
+    G1 -->|SCP / SFTP 傳輸| G2
+
+    %% 樣式定義
+    classDef github fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef local fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#fff;
+    classDef js fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#fff;
+    classDef production fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#fff;
+    classDef localapi fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff;
+    classDef aws fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#fff;
+    classDef container fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff;
+    classDef githubrepo fill:#0366d6,stroke:#2b90ff,stroke-width:2px,color:#fff;
+    classDef tarball fill:#451a03,stroke:#d97706,stroke-width:2px,color:#fff;
+```
+
+---
+
 ## 🌟 核心功能特色
 
 ### 1. 🖥️ 運行概覽 (Infrastructure Metrics)
