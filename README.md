@@ -2,7 +2,7 @@
 
 ![Python Testing](https://github.com/halion-gao/ckc101/actions/workflows/python-tests.yml/badge.svg)
 
-本專案是一個針對 SRE (Site Reliability Engineering) 團隊設計的高效能即時運維指揮中心儀表板。基於 **Flask (Backend)** 與 **Vanilla CSS/JS (Frontend)** 構建，具備輕量化的系統監控、診斷工具、動態日誌流分析、即時股市看盤，以及內部知識庫整合功能。
+本專案是一個針對 SRE (Site Reliability Engineering) 團隊設計的高效能即時運維指揮中心儀表板。基於 **Flask (Backend)** 與 **Vanilla CSS/JS (Frontend)** 構建，具備輕量化的系統監控、診斷工具、動態日誌流分析、即時股市看盤，以及內部知識庫與 AWS S3 儲存桶整合功能。
 
 ---
 
@@ -32,8 +32,8 @@ graph TD
         end
         
         subgraph EC2 ["方案 B: AWS EC2 (虛擬主機手動部署)"]
-            G1["ckc101-app.tar <br> (本地導出 Docker Image)"]:::tarball
-            G2["EC2 執行個體 <br> (Docker Load 載入並執行)"]:::aws
+            G1["Docker Hub 映像檔 <br> (halion0329/ckc101-app:latest)"]:::tarball
+            G2["EC2 執行個體 <br> (Docker Run 直接啟動)"]:::aws
         end
     end
 
@@ -42,7 +42,15 @@ graph TD
 
     F1 -->|Push 觸發 Webhook| F2
     F2 -->|依據 Dockerfile 構建| F3
-    G1 -->|SCP / SFTP 傳輸| G2
+    G1 -->|Docker Pull 拉取| G2
+
+    subgraph CloudStorage ["雲端儲存資源"]
+        S3["AWS S3 Bucket <br> (ckc101-07)"]:::s3style
+    end
+
+    F3 -->|Boto3 (IAM 實例角色憑證)| S3
+    G2 -->|Boto3 (IAM 實例角色憑證)| S3
+    SRE_App -->|Boto3 (本地 ~/.aws/credentials)| S3
 
     %% 樣式定義
     classDef github fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
@@ -54,6 +62,7 @@ graph TD
     classDef container fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff;
     classDef githubrepo fill:#0366d6,stroke:#2b90ff,stroke-width:2px,color:#fff;
     classDef tarball fill:#451a03,stroke:#d97706,stroke-width:2px,color:#fff;
+    classDef s3style fill:#3f3f46,stroke:#f59e0b,stroke-width:2px,color:#fff;
 ```
 
 ---
@@ -83,12 +92,19 @@ graph TD
 - **嵌入式閱讀**：直接在儀表板中以預覽模式 (`/preview`) 嵌入共用運維規範與故障排除手冊。
 - **快速跳轉協作**：提供一鍵跳轉按鈕，在瀏覽器新分頁中開啟 Google 文件的編輯/共用模式。
 
+### 6. ☁️ AWS S3 雲端檔案儲存管理 (S3 File Manager)
+- **與 AWS S3 儲存桶連動**：直接連線 AWS S3 儲存桶 `ckc101-07`，拉取儲存桶內檔案清單（包括檔案名稱、大小、最後修改時間）。
+- **拖曳上傳 (Drag and Drop)**：支援將檔案直接拖曳至網頁的指定區域，或是點擊瀏覽上傳，並顯示上傳狀態及動態進度條。
+- **無金鑰安全設計 (Credentials Security)**：後端程式碼完全不寫入或硬編碼任何 AWS Access Key，改由 `boto3` 的預設憑證解析鏈自動處理。
+  - *本地開發*：自動套用您的 AWS CLI 設定檔或環境變數。
+  - *AWS EC2 主機*：自動解析並套用該 EC2 綁定的 IAM Instance Profile 憑證權限。
+
 ---
 
 ## 🛠️ 技術棧說明
-- **後端 (Backend)**: Python, Flask (輕量、原生標準庫相依，確保高效率)
+- **後端 (Backend)**: Python, Flask, Boto3 (AWS SDK)
 - **前端 (Frontend)**: HTML5, CSS3 (CSS 變數、毛玻璃玻璃擬態 Glassmorphism、暗黑主題)、原生 JavaScript
-- **測試 (Testing)**: Pytest (包含 API 端點驗證與 HTML 結構斷言)
+- **測試 (Testing)**: Pytest (包含 API 端點驗證、HTML 結構斷言與 Mock 模擬 S3 連線測試)
 - **持續整合 (CI)**: GitHub Actions 工作流自動運行測試
 
 ---
@@ -102,11 +118,11 @@ ckc101/
 │   │   └── index.html        # 儀表板 HTML 模板
 │   └── static/
 │       ├── css/
-│       │   └── style.css     # 玻璃擬態與響應式佈局 CSS 樣式
+│       │   └── style.css     # 玻璃擬態與響應式佈局 CSS 樣式 (包含 S3 拖曳區樣式)
 │       └── js/
-│           └── main.js       # 輪詢、導覽、原地 DOM 更新、日誌 GC 邏輯
+│           └── main.js       # 輪詢、導覽、原地 DOM 更新、日誌 GC、S3 上傳與輪詢邏輯
 ├── test/
-│   └── test_app.py           # 整合測試與 API 端點單元測試
+│   └── test_app.py           # 整合測試與 API 端點單元測試 (包含 Mocked S3 測試)
 ├── Dockerfile                # Docker 容器化配置檔 (Python 3.12-slim)
 ├── .dockerignore             # Docker 構建排除清單
 ├── deploy-aws.md             # AWS 雲端部署與架構指南手冊
@@ -170,7 +186,7 @@ pytest test/
 
 ## 📝 專案更新與 Docker 封裝歷程 (Update & Packaging Log)
 
-本專案於近期完成了架構重構與容器化支援，以下為主要更新動作：
+本專案於近期完成了架構重構、容器化支援與 AWS 雲端對接，以下為主要更新動作：
 
 1. **前後端分離架構與 CORS 原生支援**：
    - 於 `src/app.py` 中利用 `@app.after_request` 與 `@app.errorhandler(405)` 實現原生 CORS 跨域標頭及 `OPTIONS` 預檢（Preflight）請求響應，避免導入額外依賴套件。
@@ -180,5 +196,9 @@ pytest test/
 3. **Docker 容器化設定**：
    - 撰寫 `Dockerfile` 以輕量級 `python:3.12-slim` 作為基礎映像檔，採用生產級 **Gunicorn** WSGI 伺服器進行 Port `19191` 服務綁定。
    - 編寫 `.dockerignore` 排除無效構建檔案，並調整 `.gitignore` 避免將本地端產出的 `ckc101-app.tar` (47MB 映像檔備份) 推送至 GitHub。
-4. **AWS 部署指南整合**：
-   - 新增 `deploy-aws.md`，提供關於 **AWS App Runner**、**AWS EC2** 以及 **Amazon ECR** 的詳細操作與映像檔傳輸命令（`docker save` 與 `docker load` 備份包裝部署）。
+4. **AWS S3 整合與無金鑰安全設計**：
+   - 引入 `boto3` 套件並完成與 AWS S3 Bucket `ckc101-07` 的整合。
+   - 程式內部完全不洩漏金鑰憑證，利用 `boto3` 的預設解析，直接相容於 AWS EC2 實例的 IAM Role。
+   - 新增 4 個 mocked API 測試案例，實現測試環境與雲端資源的解耦，讓單元測試能夠百分之百離線並於 CI 流程中快速通過。
+5. **Docker Hub Image 推送**：
+   - 完成將最新的 Docker 映像檔打包，並順利推送至個人 Docker Hub 倉庫：`halion0329/ckc101-app:latest`。
