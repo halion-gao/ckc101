@@ -113,3 +113,20 @@ pytest test/
 
 * **AWS 雲端部署**：
   詳細的 AWS App Runner、AWS EC2 手動部署及 ECR 映像檔推送步驟，請參閱 [AWS 部署與架構手冊 (deploy-aws.md)](deploy-aws.md)。
+
+---
+
+## 📝 專案更新與 Docker 封裝歷程 (Update & Packaging Log)
+
+本專案於近期完成了架構重構與容器化支援，以下為主要更新動作：
+
+1. **前後端分離架構與 CORS 原生支援**：
+   - 於 `src/app.py` 中利用 `@app.after_request` 與 `@app.errorhandler(405)` 實現原生 CORS 跨域標頭及 `OPTIONS` 預檢（Preflight）請求響應，避免導入額外依賴套件。
+   - 於前端 `src/static/js/main.js` 中實作 `API_BASE` 動態解析，支援在 GitHub Pages 靜態託管環境下自動將 API 路由指向生產端後端，並於本地開發時自動降級回相對路徑。
+2. **目錄結構調整與標準化**：
+   - 將原 `sre/` 目錄統一命名為 `src/` 目錄，並全面更新 `run.sh`、`test_app.py` 與 `README.md` 的路徑參照。
+3. **Docker 容器化設定**：
+   - 撰寫 `Dockerfile` 以輕量級 `python:3.12-slim` 作為基礎映像檔，採用生產級 **Gunicorn** WSGI 伺服器進行 Port `19191` 服務綁定。
+   - 編寫 `.dockerignore` 排除無效構建檔案，並調整 `.gitignore` 避免將本地端產出的 `ckc101-app.tar` (47MB 映像檔備份) 推送至 GitHub。
+4. **AWS 部署指南整合**：
+   - 新增 `deploy-aws.md`，提供關於 **AWS App Runner**、**AWS EC2** 以及 **Amazon ECR** 的詳細操作與映像檔傳輸命令（`docker save` 與 `docker load` 備份包裝部署）。
