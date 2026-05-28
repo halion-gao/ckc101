@@ -4,6 +4,8 @@ import random
 import datetime
 import urllib.request
 import urllib.error
+import boto3
+from botocore.exceptions import ClientError
 # pyrefly: ignore [missing-import]
 from flask import Flask, jsonify, render_template, request
 
@@ -15,6 +17,10 @@ except ImportError:
     HAS_PSUTIL = False
 
 app = Flask(__name__)
+
+# AWS S3 Configuration (Security: No hardcoded credentials, resolves via IAM instance profile on EC2)
+S3_BUCKET_NAME = "ckc101-07"
+s3_client = boto3.client("s3")
 
 @app.after_request
 def add_cors_headers(response):
@@ -278,6 +284,46 @@ def post_company_action():
         "logs": logs,
         "incidents": COMPANY_DATA["incidents"]
     })
+
+@app.route("/api/s3/files", methods=["GET"])
+def list_s3_files():
+    try:
+        response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+        files = []
+        if "Contents" in response:
+            for obj in response["Contents"]:
+                files.append({
+                    "key": obj["Key"],
+                    "size": obj["Size"],
+                    "last_modified": obj["LastModified"].strftime("%Y-%m-%d %H:%M:%S")
+                })
+        return jsonify({"status": "SUCCESS", "files": files})
+    except ClientError as e:
+        return jsonify({"status": "ERROR", "message": f"S3 Client Error: {e.response['Error']['Message']}"}), 500
+    except Exception as e:
+        return jsonify({"status": "ERROR", "message": str(e)}), 500
+
+@app.route("/api/s3/upload", methods=["POST"])
+def upload_to_s3():
+    if "file" not in request.files:
+        return jsonify({"status": "ERROR", "message": "No file part in the request"}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"status": "ERROR", "message": "No selected file"}), 400
+    
+    try:
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(file.filename)
+        s3_client.upload_fileobj(
+            file,
+            S3_BUCKET_NAME,
+            filename
+        )
+        return jsonify({"status": "SUCCESS", "message": f"Successfully uploaded {filename} to S3", "key": filename})
+    except ClientError as e:
+        return jsonify({"status": "ERROR", "message": f"S3 Upload Failed: {e.response['Error']['Message']}"}), 500
+    except Exception as e:
+        return jsonify({"status": "ERROR", "message": str(e)}), 500
 
 @app.route('/blog')
 def blog_home():

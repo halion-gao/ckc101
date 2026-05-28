@@ -171,5 +171,72 @@ def test_cors_headers_and_options(client):
     assert response_opt.headers.get('Access-Control-Allow-Headers') == 'Content-Type,Authorization'
     assert response_opt.headers.get('Access-Control-Allow-Methods') == 'GET,POST,PUT,DELETE,OPTIONS'
 
+def test_list_s3_files(client):
+    """Test listing files from S3 bucket."""
+    from unittest.mock import patch
+    import datetime
+    
+    mock_response = {
+        "Contents": [
+            {
+                "Key": "test-file.txt",
+                "Size": 1024,
+                "LastModified": datetime.datetime(2026, 5, 28, 12, 0, 0)
+            }
+        ]
+    }
+    with patch('src.app.s3_client.list_objects_v2', return_value=mock_response) as mock_list:
+        response = client.get('/api/s3/files')
+        assert response.status_code == 200
+        assert response.is_json
+        data = response.get_json()
+        assert data['status'] == 'SUCCESS'
+        assert len(data['files']) == 1
+        assert data['files'][0]['key'] == 'test-file.txt'
+        assert data['files'][0]['size'] == 1024
+        assert data['files'][0]['last_modified'] == '2026-05-28 12:00:00'
+        mock_list.assert_called_once_with(Bucket='ckc101-07')
+
+def test_list_s3_files_error(client):
+    """Test S3 file listing error handling."""
+    from unittest.mock import patch
+    from botocore.exceptions import ClientError
+    
+    error_response = {'Error': {'Code': 'NoSuchBucket', 'Message': 'The specified bucket does not exist'}}
+    with patch('src.app.s3_client.list_objects_v2', side_effect=ClientError(error_response, 'ListObjectsV2')):
+        response = client.get('/api/s3/files')
+        assert response.status_code == 500
+        data = response.get_json()
+        assert data['status'] == 'ERROR'
+        assert 'NoSuchBucket' in data['message'] or 'bucket does not exist' in data['message']
+
+def test_upload_to_s3(client):
+    """Test uploading a file to S3 bucket."""
+    from unittest.mock import patch
+    import io
+    
+    data = {
+        'file': (io.BytesIO(b'dummy file content'), 'test_upload.txt')
+    }
+    with patch('src.app.s3_client.upload_fileobj') as mock_upload:
+        response = client.post('/api/s3/upload', data=data, content_type='multipart/form-data')
+        assert response.status_code == 200
+        assert response.is_json
+        res_data = response.get_json()
+        assert res_data['status'] == 'SUCCESS'
+        assert 'test_upload.txt' in res_data['message']
+        assert res_data['key'] == 'test_upload.txt'
+        
+        assert mock_upload.call_count == 1
+        args, kwargs = mock_upload.call_args
+        assert args[1] == 'ckc101-07'
+        assert args[2] == 'test_upload.txt'
+
+def test_upload_to_s3_no_file(client):
+    """Test upload failing when no file part is present."""
+    response = client.post('/api/s3/upload', data={})
+    assert response.status_code == 400
+    assert response.get_json()['status'] == 'ERROR'
+
 if __name__ == "__main__":
     pytest.main([__file__])

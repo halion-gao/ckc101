@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '#ping-check': document.getElementById('menu-ping'),
         '#logs': document.getElementById('menu-logs'),
         '#stocks-company': document.getElementById('menu-stocks-company'),
-        '#docs': document.getElementById('menu-docs')
+        '#docs': document.getElementById('menu-docs'),
+        '#s3-files': document.getElementById('menu-s3')
     };
 
     const sections = {
@@ -20,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '#ping-check': document.getElementById('ping-check'),
         '#logs': document.getElementById('logs'),
         '#stocks-company': document.getElementById('stocks-company'),
-        '#docs': document.getElementById('docs')
+        '#docs': document.getElementById('docs'),
+        '#s3-files': document.getElementById('s3-files')
     };
 
     function navigateToSection(hash) {
@@ -543,4 +545,144 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchCompanyInfo();
         }
     });
+
+    // 8. S3 File Manager Integration
+    function fetchS3Files() {
+        const body = document.getElementById('s3-files-body');
+        if (!body) return;
+        
+        fetch(`${API_BASE}/api/s3/files`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'SUCCESS') {
+                    body.innerHTML = '';
+                    if (data.files.length === 0) {
+                        body.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">儲存桶目前沒有檔案</td></tr>`;
+                    } else {
+                        data.files.forEach(file => {
+                            const tr = document.createElement('tr');
+                            let sizeStr = '';
+                            if (file.size < 1024) {
+                                sizeStr = `${file.size} B`;
+                            } else if (file.size < 1024 * 1024) {
+                                sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
+                            } else {
+                                sizeStr = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                            }
+                            tr.innerHTML = `
+                                <td><strong>${file.key}</strong></td>
+                                <td>${sizeStr}</td>
+                                <td>${file.last_modified}</td>
+                            `;
+                            body.appendChild(tr);
+                        });
+                    }
+                } else {
+                    body.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--neon-red);">無法載入檔案清單: ${data.message}</td></tr>`;
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching S3 files:', err);
+                body.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--neon-red);">載入檔案時發生錯誤。</td></tr>`;
+            });
+    }
+
+    function uploadFile(file) {
+        const statusEl = document.getElementById('upload-status');
+        if (!statusEl) return;
+        
+        statusEl.classList.remove('hidden');
+        statusEl.className = 'upload-status';
+        statusEl.querySelector('.spinner').style.display = 'inline-block';
+        statusEl.querySelector('.status-text').textContent = `正在上傳 ${file.name}...`;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch(`${API_BASE}/api/s3/upload`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'SUCCESS') {
+                statusEl.className = 'upload-status success';
+                statusEl.querySelector('.spinner').style.display = 'none';
+                statusEl.querySelector('.status-text').textContent = `✅ 成功上傳檔案: ${file.name}`;
+                fetchS3Files();
+            } else {
+                statusEl.className = 'upload-status error';
+                statusEl.querySelector('.spinner').style.display = 'none';
+                statusEl.querySelector('.status-text').textContent = `❌ 上傳失敗: ${data.message}`;
+            }
+        })
+        .catch(err => {
+            console.error('Error uploading file:', err);
+            statusEl.className = 'upload-status error';
+            statusEl.querySelector('.spinner').style.display = 'none';
+            statusEl.querySelector('.status-text').textContent = `❌ 發生錯誤，無法連線至伺服器。`;
+        });
+    }
+
+    const dropzone = document.getElementById('s3-dropzone');
+    const fileInput = document.getElementById('s3-file-input');
+    const browseBtn = document.getElementById('s3-browse');
+    const refreshS3Btn = document.getElementById('refresh-s3-btn');
+
+    if (dropzone && fileInput && browseBtn) {
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+        
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                uploadFile(fileInput.files[0]);
+            }
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                uploadFile(files[0]);
+            }
+        }, false);
+    }
+
+    if (refreshS3Btn) {
+        refreshS3Btn.addEventListener('click', () => {
+            fetchS3Files();
+        });
+    }
+
+    window.addEventListener('hashchange', () => {
+        if (window.location.hash === '#s3-files') {
+            fetchS3Files();
+        }
+    });
+
+    if (window.location.hash === '#s3-files') {
+        fetchS3Files();
+    }
 });

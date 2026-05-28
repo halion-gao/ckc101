@@ -69,6 +69,14 @@
                     </svg>
                     <span>運維文件</span>
                 </a>
+                <a href="#s3-files" class="menu-item" id="menu-s3">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span>S3 檔案上傳</span>
+                </a>
                 <a href="/blog" target="_blank" rel="noopener noreferrer" class="menu-item" id="menu-blog">
                     <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -449,6 +457,59 @@
                                 title="SRE Operations Document"
                                 loading="lazy">
                             </iframe>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: S3 File Manager -->
+                <section id="s3-files" class="content-section hidden">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3>S3 雲端檔案儲存管理</h3>
+                            <p class="desc">直接與 AWS S3 Bucket `ckc101-07` 連動，支援拖曳上傳與檔案清單檢視。</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- Upload Area -->
+                            <div class="upload-dropzone" id="s3-dropzone">
+                                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 12px; color: var(--neon-cyan);">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <p>拖曳檔案至此處，或 <span class="browse-link" id="s3-browse">點擊瀏覽檔案</span></p>
+                                <input type="file" id="s3-file-input" style="display: none;">
+                            </div>
+                            
+                            <!-- Upload Status -->
+                            <div id="upload-status" class="upload-status hidden">
+                                <span class="spinner"></span>
+                                <span class="status-text">正在上傳...</span>
+                            </div>
+                            
+                            <!-- S3 File List -->
+                            <div class="s3-file-list-wrapper margin-top">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h4>S3 儲存桶檔案列表 (ckc101-07)</h4>
+                                    <button id="refresh-s3-btn" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.8rem;">🔄 重新整理</button>
+                                </div>
+                                <div class="table-container">
+                                    <table class="ping-table">
+                                        <thead>
+                                            <tr>
+                                                <th>檔案名稱 (Key)</th>
+                                                <th>大小 (Size)</th>
+                                                <th>修改時間 (Last Modified)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="s3-files-body">
+                                            <!-- Dynamic S3 entries -->
+                                            <tr>
+                                                <td colspan="3" style="text-align: center; color: var(--text-secondary);">正在載入檔案清單...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
