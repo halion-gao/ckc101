@@ -1,0 +1,28 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Virtual environments
+.venv
+venv
+ENV
+
+# Python caching & build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.eggs/
+.egg-info/
+dist/
+build/
+
+# Local configuration and logs
+*.log
+.DS_Store
+.idx/
+.gemini/
+*.md
+!README.md
