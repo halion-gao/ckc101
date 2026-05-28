@@ -55,6 +55,9 @@ ckc101/
 │           └── main.js       # 輪詢、導覽、原地 DOM 更新、日誌 GC 邏輯
 ├── test/
 │   └── test_app.py           # 整合測試與 API 端點單元測試
+├── Dockerfile                # Docker 容器化配置檔 (Python 3.12-slim)
+├── .dockerignore             # Docker 構建排除清單
+├── deploy-aws.md             # AWS 雲端部署與架構指南手冊
 ├── requirements.txt          # 專案套件相依清單
 ├── run.sh                    # 開啟服務指令腳本
 └── test.sh                   # 執行測試指令腳本
@@ -94,3 +97,19 @@ python src/app.py
 ```bash
 pytest test/
 ```
+
+### 3. 使用 Docker 部署與執行
+本專案已支援 Docker 容器化，可於本地或 AWS 雲端快速啟動服務。
+
+* **在本地端建置與啟動服務**：
+  ```bash
+  # 1. 建立 Docker 映像檔
+  docker build -t ckc101-app .
+  
+  # 2. 在背景啟動容器 (對映 Port 19191)
+  docker run -d -p 19191:19191 --name ckc101-container ckc101-app
+  ```
+  啟動後即可在瀏覽器中訪問 `http://localhost:19191`。
+
+* **AWS 雲端部署**：
+  詳細的 AWS App Runner、AWS EC2 手動部署及 ECR 映像檔推送步驟，請參閱 [AWS 部署與架構手冊 (deploy-aws.md)](deploy-aws.md)。
