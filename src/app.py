@@ -343,18 +343,19 @@ def busy_loop(duration):
 
 @app.route("/api/cpu/stress", methods=["POST"])
 def stress_cpu():
-    import threading
+    import multiprocessing
     duration = int(request.args.get("duration", 10))
     duration = min(60, max(1, duration))  # limit to [1, 60] seconds
     
     global STRESS_CPU_UNTIL
     STRESS_CPU_UNTIL = time.time() + duration
     
-    # Spawn busy-loop threads to consume CPU
-    for _ in range(2):
-        threading.Thread(target=busy_loop, args=(duration,), daemon=True).start()
+    # Spawn busy-loop processes to consume CPU across all cores
+    num_cores = multiprocessing.cpu_count()
+    for _ in range(num_cores):
+        multiprocessing.Process(target=busy_loop, args=(duration,), daemon=True).start()
         
-    return jsonify({"status": "SUCCESS", "message": f"Stressing CPU for {duration} seconds"})
+    return jsonify({"status": "SUCCESS", "message": f"Stressing CPU across {num_cores} cores for {duration} seconds"})
 
 @app.route('/blog')
 def blog_home():
