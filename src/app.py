@@ -37,6 +37,7 @@ def handle_405(e):
 
 # Track start time for uptime calculation
 START_TIME = time.time()
+STRESS_CPU_UNTIL = 0.0
 
 # Mock logs generation
 LOG_MESSAGES = [
@@ -59,6 +60,7 @@ def index():
 
 @app.route("/api/metrics")
 def get_metrics():
+    global STRESS_CPU_UNTIL
     # Calculate uptime
     uptime_seconds = int(time.time() - START_TIME)
     days = uptime_seconds // 86400
@@ -67,9 +69,13 @@ def get_metrics():
     seconds = uptime_seconds % 60
     uptime_str = f"{days}d {hours}h {minutes}m {seconds}s"
 
+    is_stressing = time.time() < STRESS_CPU_UNTIL
+
     if HAS_PSUTIL:
         # Real statistics
         cpu = psutil.cpu_percent(interval=None)
+        if is_stressing:
+            cpu = max(cpu, round(85.0 + random.uniform(5.0, 10.0), 1))
         memory = psutil.virtual_memory().percent
         disk = psutil.disk_usage("/").percent
         # Mock network values that look reasonable but base on system IO if possible
@@ -79,9 +85,12 @@ def get_metrics():
         net_out = round((net_io.bytes_sent % 5000000) / 1024.0, 1)
     else:
         # Mock statistics with realistic fluctuations
-        cpu = round(30.0 + random.uniform(-15.0, 15.0), 1)
-        # Keep CPU bounds safe
-        cpu = max(5.0, min(98.0, cpu))
+        if is_stressing:
+            cpu = round(85.0 + random.uniform(5.0, 10.0), 1)
+        else:
+            cpu = round(30.0 + random.uniform(-15.0, 15.0), 1)
+            # Keep CPU bounds safe
+            cpu = max(5.0, min(98.0, cpu))
         
         # Memory fluctuates slowly
         memory = round(64.5 + random.uniform(-2.0, 2.0), 1)
@@ -312,6 +321,7 @@ def upload_to_s3():
         return jsonify({"status": "ERROR", "message": "No selected file"}), 400
     
     try:
+        # pyrefly: ignore [missing-import]
         from werkzeug.utils import secure_filename
         filename = secure_filename(file.filename)
         s3_client.upload_fileobj(
@@ -324,6 +334,27 @@ def upload_to_s3():
         return jsonify({"status": "ERROR", "message": f"S3 Upload Failed: {e.response['Error']['Message']}"}), 500
     except Exception as e:
         return jsonify({"status": "ERROR", "message": str(e)}), 500
+
+def busy_loop(duration):
+    import time
+    end_time = time.time() + duration
+    while time.time() < end_time:
+        pass
+
+@app.route("/api/cpu/stress", methods=["POST"])
+def stress_cpu():
+    import threading
+    duration = int(request.args.get("duration", 10))
+    duration = min(60, max(1, duration))  # limit to [1, 60] seconds
+    
+    global STRESS_CPU_UNTIL
+    STRESS_CPU_UNTIL = time.time() + duration
+    
+    # Spawn busy-loop threads to consume CPU
+    for _ in range(2):
+        threading.Thread(target=busy_loop, args=(duration,), daemon=True).start()
+        
+    return jsonify({"status": "SUCCESS", "message": f"Stressing CPU for {duration} seconds"})
 
 @app.route('/blog')
 def blog_home():

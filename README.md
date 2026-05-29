@@ -48,9 +48,9 @@ graph TD
         S3["AWS S3 Bucket <br> (ckc101-07)"]:::s3style
     end
 
-    F3 -->|Boto3 (IAM 實例角色憑證)| S3
-    G2 -->|Boto3 (IAM 實例角色憑證)| S3
-    SRE_App -->|Boto3 (本地 ~/.aws/credentials)| S3
+    F3 -->|"Boto3 (IAM 實例角色憑證)"| S3
+    G2 -->|"Boto3 (IAM 實例角色憑證)"| S3
+    SRE_App -->|"Boto3 (本地 ~/.aws/credentials)"| S3
 
     %% 樣式定義
     classDef github fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
@@ -72,6 +72,7 @@ graph TD
 ### 1. 🖥️ 運行概覽 (Infrastructure Metrics)
 - **實時系統指標**：動態更新 CPU 負載 (Radial Progress)、記憶體使用率、硬碟空間使用率以及網路 I/O 吞吐量 (KB/s)。
 - **延遲與負載歷史趨勢**：使用高效能 SVG 折線圖實時繪製延遲與 CPU 變化趨勢。
+- **CPU 壓力測試 (CPU Stress Test)**：在 CPU 儀表板卡片中整合「🔥 壓力測試 (Stress)」按鈕。點選後，後端會啟動背景繁忙執行緒以進行真實 CPU 負載測試（持續 10 秒），同時系統指標面板會即時呈現 CPU 飆高（85% ~ 95% 以上）的動態歷史折線與環狀圖。
 
 ### 2. 🔌 連線檢測 (Ping Health Checker)
 - **服務健康檢測**：輸入 API 端點或網址，驗證可達性、回應狀態碼與連線延遲。

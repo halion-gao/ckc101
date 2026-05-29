@@ -685,4 +685,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.hash === '#s3-files') {
         fetchS3Files();
     }
+
+    // 9. CPU Stress Feature
+    const stressCpuBtn = document.getElementById('stress-cpu-btn');
+    if (stressCpuBtn) {
+        stressCpuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            stressCpuBtn.disabled = true;
+            stressCpuBtn.textContent = '🔥 壓力測試中...';
+            
+            fetch(`${API_BASE}/api/cpu/stress?duration=10`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'SUCCESS') {
+                        // Keep button disabled during stress duration (10s)
+                        setTimeout(() => {
+                            stressCpuBtn.disabled = false;
+                            stressCpuBtn.textContent = '🔥 壓力測試 (Stress)';
+                        }, 10000);
+                    } else {
+                        alert('無法啟動壓力測試。');
+                        stressCpuBtn.disabled = false;
+                        stressCpuBtn.textContent = '🔥 壓力測試 (Stress)';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error stressing CPU:', err);
+                    alert('連線伺服器發生異常。');
+                    stressCpuBtn.disabled = false;
+                    stressCpuBtn.textContent = '🔥 壓力測試 (Stress)';
+                });
+        });
+    }
 });

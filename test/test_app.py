@@ -238,5 +238,18 @@ def test_upload_to_s3_no_file(client):
     assert response.status_code == 400
     assert response.get_json()['status'] == 'ERROR'
 
+def test_api_cpu_stress(client):
+    """Test the CPU stress API endpoint."""
+    from unittest.mock import patch
+    
+    with patch('threading.Thread') as mock_thread:
+        response = client.post('/api/cpu/stress?duration=5')
+        assert response.status_code == 200
+        assert response.is_json
+        data = response.get_json()
+        assert data['status'] == 'SUCCESS'
+        assert 'Stressing CPU' in data['message']
+        assert mock_thread.call_count == 2
+
 if __name__ == "__main__":
     pytest.main([__file__])
